@@ -44,26 +44,15 @@ public class Auth0UserDetails implements UserDetails {
 
     private void setupGrantedAuthorities(final Map<String, Object> map, final Auth0AuthorityStrategy authorityStrategy) {
         this.authorities = new ArrayList<>();
-        final String authorityStrategyName = authorityStrategy.toString();
-        if (map.containsKey(authorityStrategyName)) {
-            // here, we differentiate between "scope" which is a space delimited string & "roles" and "groups" which are a list
-            try {
-                List<String> authorities = new ArrayList<>();
-                if (Auth0AuthorityStrategy.SCOPE.equals(authorityStrategy)) {
-                    final String authoritiesStr = (String) map.get(authorityStrategyName);
-                    if (authoritiesStr != null) {
-                        authorities = Arrays.asList(authoritiesStr.split("\\s+"));
-                    }
-                } else {
-                    authorities = (ArrayList<String>) map.get(authorityStrategyName);
-                }
-                for (final String authority : authorities) {
+        try {
+            Collection<String> authorities = authorityStrategy.getAuthorities(map);
+            if (authorities != null) {
+                 for (final String authority : authorities) {
                     this.authorities.add(new SimpleGrantedAuthority(authority));
                 }
-            } catch (ClassCastException e) {
-                e.printStackTrace();
-                logger.error("Error in casting the roles object");
             }
+        } catch (Exception e) {
+            logger.error("Error in executing the authority strategy", e);
         }
     }
 

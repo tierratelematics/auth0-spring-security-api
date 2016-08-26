@@ -77,20 +77,25 @@ public class Auth0SecurityConfig extends WebSecurityConfigurerAdapter {
         return new Auth0CORSFilter();
     }
 
-    @Bean(name = "auth0AuthenticationProvider")
-    public Auth0AuthenticationProvider auth0AuthenticationProvider() {
+    @Bean(name = "auth0AuthorityStrategy")
+    public Auth0AuthorityStrategy auth0AuthorityStrategy() {
         // First check the authority strategy configured for the API
-        if (!Auth0AuthorityStrategy.contains(this.authorityStrategy)) {
+        if (!Auth0AuthorityStrategyType.contains(this.authorityStrategy)) {
             throw new IllegalStateException("Configuration error, illegal authority strategy");
         }
-        final Auth0AuthorityStrategy authorityStrategy = Auth0AuthorityStrategy.valueOf(this.authorityStrategy);
+        return Auth0AuthorityStrategyType.valueOf(this.authorityStrategy).getStrategy();
+    }
+
+    @Bean(name = "auth0AuthenticationProvider")
+    public Auth0AuthenticationProvider auth0AuthenticationProvider() {
+
         final Auth0AuthenticationProvider authenticationProvider = new Auth0AuthenticationProvider();
         authenticationProvider.setDomain(domain);
         authenticationProvider.setIssuer(issuer);
         authenticationProvider.setClientId(clientId);
         authenticationProvider.setClientSecret(clientSecret);
         authenticationProvider.setSecuredRoute(securedRoute);
-        authenticationProvider.setAuthorityStrategy(authorityStrategy);
+        authenticationProvider.setAuthorityStrategy(auth0AuthorityStrategy());
         authenticationProvider.setBase64EncodedSecret(base64EncodedSecret);
         authenticationProvider.setSigningAlgorithm(Algorithm.valueOf(this.signingAlgorithm));
         authenticationProvider.setPublicKeyPath(this.publicKeyPath);
